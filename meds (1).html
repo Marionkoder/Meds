@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Meds">
+<meta name="theme-color" content="#888780">
+<title>Meds</title>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-meds.png">
+<style>
+:root{
+  --accent:#5F5E5A;--accent-pale:#F1EFE8;--accent-light:#B4B2A9;
+  --text:#1a1a18;--text-sec:#5F5E5A;--text-ter:#B4B2A9;
+  --border:rgba(0,0,0,0.12);--border-med:rgba(0,0,0,0.22);
+  --bg:#fff;--bg2:#f7f6f2;--nav-bg:rgba(255,255,255,0.92);
+  --danger:#A32D2D;--danger-border:rgba(226,75,74,0.35);
+  --green:#0F6E56;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --text:#f0ede4;--text-sec:#B4B2A9;--text-ter:#5F5E5A;
+    --border:rgba(255,255,255,0.1);--border-med:rgba(255,255,255,0.18);
+    --bg:#1c1b18;--bg2:#252420;--nav-bg:rgba(28,27,24,0.92);
+    --accent-pale:#2C2C2A;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Helvetica Neue',sans-serif;overscroll-behavior:none}
+body{display:flex;flex-direction:column;max-width:480px;margin:0 auto;min-height:100dvh}
+.view{display:none;flex:1;overflow-y:auto;padding-bottom:80px}
+.view.active{display:block}
+
+/* Ikon-banner øverst på I dag */
+.icon-banner{margin:16px 18px 4px;padding:18px;background:var(--bg2);border-radius:16px;border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center}
+.icon-banner img{width:80px;height:80px;border-radius:18px}
+.icon-banner svg{width:80px;height:80px}
+
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:0.5px solid var(--border)}
+.top-bar-title{font-size:22px;font-weight:500;letter-spacing:-0.5px}
+.top-bar-sub{font-size:12px;color:var(--text-ter)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:var(--nav-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:0.5px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;gap:3px;border:none;background:transparent;cursor:pointer;color:var(--text-ter);font-size:10px;font-family:inherit;transition:color 0.15s}
+.bn svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.bn.active{color:var(--accent)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 18px 8px}
+.metric{background:var(--bg2);border-radius:12px;padding:14px;text-align:center}
+.metric-label{font-size:11px;color:var(--text-sec);margin-bottom:4px}
+.metric-val{font-size:26px;font-weight:500;letter-spacing:-0.5px}
+.section-head{font-size:11px;font-weight:500;color:var(--text-ter);text-transform:uppercase;letter-spacing:0.06em;padding:0 18px;margin:14px 0 8px}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:16px;margin:0 18px 10px;overflow:hidden}
+button.icon-btn{width:36px;height:36px;border-radius:10px;border:0.5px solid var(--border-med);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-sec);flex-shrink:0}
+button.icon-btn svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+button.icon-btn:active{background:var(--bg2)}
+button.icon-btn.danger{border-color:var(--danger-border);color:var(--danger)}
+.fab{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 18px 12px;padding:14px;border:0.5px solid var(--border-med);border-radius:14px;background:var(--bg2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text)}
+.fab svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:24px 24px 0 0;padding:20px 18px 36px;width:100%;max-width:480px;max-height:90dvh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border-med);margin:0 auto 16px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-size:17px;font-weight:500}
+label.field{display:block;margin-bottom:14px;font-size:13px;color:var(--text-sec)}
+label.field span{display:block;margin-bottom:5px}
+label.field input,label.field select,label.field textarea{display:block;width:100%;font-size:15px;padding:11px 13px;border:0.5px solid var(--border-med);border-radius:12px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none}
+label.field input:focus,label.field select:focus{border-color:var(--accent)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.primary{display:block;width:100%;margin-top:16px;padding:14px;border:none;border-radius:14px;background:var(--accent);font-size:15px;font-weight:500;color:#fff;cursor:pointer;font-family:inherit}
+button.primary:active{opacity:0.85}
+button.danger-btn{display:block;width:100%;margin-top:10px;padding:12px;border:0.5px solid var(--danger-border);border-radius:14px;background:transparent;font-size:14px;font-weight:500;color:var(--danger);cursor:pointer;font-family:inherit}
+.empty{color:var(--text-ter);font-size:13px;padding:24px 18px;text-align:center;line-height:1.6}
+.err{font-size:12px;color:var(--danger);margin-top:8px}
+
+/* Medisin-rad — kompakt på én linje */
+.med-card{border-bottom:0.5px solid var(--border)}
+.med-card:last-child{border-bottom:none}
+.med-card-header{display:flex;align-items:center;gap:10px;padding:10px 16px 4px}
+.med-card-name{font-size:14px;font-weight:500;flex:1}
+.med-card-cat{font-size:11px;color:var(--text-ter)}
+.med-type-badge{font-size:10px;padding:2px 7px;border-radius:6px;background:var(--bg2);color:var(--text-ter);border:0.5px solid var(--border);white-space:nowrap}
+.med-type-badge.temp{background:#FBF0E6;color:#854F0B;border-color:#FAC775}
+.slot-rows{padding:0 16px 10px;display:flex;flex-direction:column;gap:4px}
+.slot-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--bg2)}
+.slot-label{font-size:13px;color:var(--text-sec);flex:1}
+.slot-dose{font-size:11px;color:var(--text-ter)}
+.check-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border-med);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.check-btn.taken{background:var(--accent);border-color:var(--accent)}
+.check-btn svg{width:13px;height:13px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity 0.15s}
+.check-btn.taken svg{opacity:1}
+
+.settings-med-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:0.5px solid var(--border)}
+.settings-med-row:last-child{border-bottom:none}
+.log-controls{display:flex;gap:6px;padding:0 18px;margin-bottom:12px}
+.log-chip{border:0.5px solid var(--border-med);border-radius:20px;padding:5px 13px;font-size:12px;background:transparent;color:var(--text-sec);cursor:pointer;font-family:inherit;font-weight:500}
+.log-chip.active{background:var(--accent-pale);color:var(--accent);border-color:var(--accent-light)}
+.day-block{padding:0 18px;border-bottom:0.5px solid var(--border)}
+.day-block:last-child{border-bottom:none}
+.day-head{display:flex;align-items:baseline;gap:8px;padding:12px 0 6px}
+.day-head-date{font-size:13px;font-weight:500;color:var(--text)}
+.day-head-wd{font-size:11px;color:var(--text-ter)}
+.day-entry{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.day-entry:last-child{border-bottom:none}
+.day-entry-name{font-size:13px;color:var(--text);flex:1}
+.day-entry-slot{font-size:11px;color:var(--text-sec)}
+.day-entry-dose{font-size:11px;color:var(--text-ter)}
+.day-empty{font-size:12px;color:var(--text-ter);padding:6px 0 10px}
+.cat-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid var(--border)}
+.cat-row:last-child{border-bottom:none}
+.slot-builder-label{font-size:13px;color:var(--text-sec);margin-bottom:8px}
+.slot-list-modal{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.slot-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border-radius:10px}
+.slot-item-name{font-size:13px;color:var(--text);flex:1}
+.slot-item-dose{font-size:11px;color:var(--text-ter)}
+.add-slot-row{display:flex;gap:6px;margin-bottom:14px}
+.add-slot-row input{font-size:13px;padding:9px 11px;border:0.5px solid var(--border-med);border-radius:10px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none}
+.add-slot-row input:focus{border-color:var(--accent)}
+.graf-row{display:flex;align-items:flex-start;gap:10px;padding:8px 18px;border-bottom:0.5px solid var(--border)}
+.graf-row:last-child{border-bottom:none}
+.graf-date{width:56px;flex-shrink:0}
+.graf-date-main{font-size:12px;font-weight:500;color:var(--text)}
+.graf-date-wd{font-size:10px;color:var(--text-ter)}
+.graf-bar-wrap{flex:1;display:flex;flex-direction:column;gap:4px}
+.graf-med-bar{display:flex;align-items:center;gap:6px}
+.graf-med-label{font-size:10px;color:var(--text-ter);width:70px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.graf-slots{display:flex;gap:3px;flex-wrap:wrap}
+.graf-slot{width:20px;height:20px;border-radius:5px;border:1px solid var(--border-med);display:flex;align-items:center;justify-content:center}
+.graf-slot.taken{background:var(--accent);border-color:var(--accent)}
+.graf-slot.taken svg{opacity:1}
+.graf-slot svg{width:11px;height:11px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+</style>
+</head>
+<body>
+
+<div id="view-idag" class="view active">
+  <div class="icon-banner">
+    <img src="apple-touch-icon-meds.png" alt="Meds" onerror="this.style.display='none'">
+  </div>
+  <div class="metric-grid" id="metrics"></div>
+  <div class="section-head">I dag — <span id="today-label"></span></div>
+  <div class="card" id="idag-list"></div>
+</div>
+
+<div id="view-logg" class="view">
+  <div class="top-bar"><span class="top-bar-title">Logg</span></div>
+  <div class="log-controls">
+    <button class="log-chip active" onclick="setLogRange(7,this)">7 dager</button>
+    <button class="log-chip" onclick="setLogRange(30,this)">30 dager</button>
+    <button class="log-chip" onclick="setLogRange(0,this)">Alt</button>
+  </div>
+  <div id="timeline"></div>
+</div>
+
+<div id="view-graf" class="view">
+  <div class="top-bar"><span class="top-bar-title">Graf</span></div>
+  <div class="log-controls">
+    <button class="log-chip active" onclick="setGrafRange(7,this)">7 dager</button>
+    <button class="log-chip" onclick="setGrafRange(30,this)">30 dager</button>
+    <button class="log-chip" onclick="setGrafRange(0,this)">Alt</button>
+  </div>
+  <div id="graf-content"></div>
+</div>
+
+<div id="view-medisiner" class="view">
+  <div class="top-bar"><span class="top-bar-title">Medisiner</span></div>
+  <div class="section-head">Kategorier</div>
+  <div class="card" style="padding:4px 16px">
+    <div id="cat-list"></div>
+    <div style="display:flex;gap:8px;padding:10px 0">
+      <input type="text" id="new-cat-input" placeholder="Ny kategori…" style="flex:1;font-size:14px;padding:9px 12px;border:0.5px solid var(--border-med);border-radius:10px;background:var(--bg2);color:var(--text);font-family:inherit;outline:none">
+      <button class="icon-btn" onclick="addCat()" aria-label="Legg til">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="section-head">Mine medisiner</div>
+  <div class="card" id="med-settings-list"></div>
+  <button class="fab" onclick="openAddMed()">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Legg til medisin
+  </button>
+</div>
+
+<div id="view-innstillinger" class="view">
+  <div class="top-bar"><span class="top-bar-title">Innstillinger</span></div>
+  <div class="section-head">Sikkerhetskopi</div>
+  <div class="card" style="padding:14px 16px">
+    <p style="font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:12px">Last ned en sikkerhetskopi av alle dine data, eller gjenopprett fra en tidligere kopi.</p>
+    <div style="display:flex;gap:8px">
+      <button onclick="downloadBackup()" style="flex:1;padding:11px;border:0.5px solid var(--border-med);border-radius:12px;background:var(--bg2);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;font-family:inherit">Last ned kopi</button>
+      <button onclick="document.getElementById('restore-input').click()" style="flex:1;padding:11px;border:0.5px solid var(--border-med);border-radius:12px;background:var(--bg2);font-size:13px;font-weight:500;color:var(--text);cursor:pointer;font-family:inherit">Gjenopprett</button>
+    </div>
+    <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreBackup(event)">
+    <div id="backup-msg" style="font-size:12px;color:var(--green);margin-top:8px;display:none"></div>
+  </div>
+  <div class="section-head">Om appen</div>
+  <div class="card" style="padding:14px 16px">
+    <p style="font-size:13px;color:var(--text-sec);line-height:1.6">Data lagres lokalt i denne nettleseren på denne enheten.</p>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="bn active" onclick="showView('idag',this)" aria-label="I dag">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    I dag
+  </button>
+  <button class="bn" onclick="showView('logg',this)" aria-label="Logg">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Logg
+  </button>
+  <button class="bn" onclick="showView('graf',this)" aria-label="Graf">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+    Graf
+  </button>
+  <button class="bn" onclick="showView('medisiner',this)" aria-label="Medisiner">
+    <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="2" y1="14" x2="22" y2="14"/><line x1="7" y1="6" x2="7" y2="18"/><line x1="12" y1="6" x2="12" y2="18"/><line x1="17" y1="6" x2="17" y2="18"/></svg>
+    Medisiner
+  </button>
+  <button class="bn" onclick="showView('innstillinger',this)" aria-label="Innstillinger">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Innst.
+  </button>
+</nav>
+
+<!-- Modal: legg til / rediger medisin -->
+<div class="overlay" id="overlay-med">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <span class="modal-title" id="med-modal-title">Ny medisin</span>
+      <button class="icon-btn" onclick="closeModal('med')" aria-label="Lukk">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <label class="field"><span>Navn</span><input type="text" id="med-name" placeholder="f.eks. Paracet, Ibux"></label>
+    <label class="field"><span>Kategori</span><select id="med-cat"></select></label>
+    <label class="field"><span>Type</span>
+      <select id="med-type" onchange="toggleDuration()">
+        <option value="fast">Fast (tas jevnlig)</option>
+        <option value="temp">Midlertidig kur</option>
+      </select>
+    </label>
+    <div id="duration-fields" style="display:none">
+      <div class="two-col">
+        <label class="field"><span>Fra dato</span><input type="date" id="med-from"></label>
+        <label class="field"><span>Til dato</span><input type="date" id="med-to"></label>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="slot-builder-label">Tidspunkter</div>
+      <div class="slot-list-modal" id="slot-list-modal"></div>
+      <div class="add-slot-row">
+        <input type="text" id="slot-name-input" placeholder="Tidspunkt, f.eks. Morgen" style="flex:1">
+        <input type="text" id="slot-dose-input" placeholder="Dose (valgfritt)" style="width:130px">
+        <button class="icon-btn" onclick="addSlot()" aria-label="Legg til">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+    <input type="hidden" id="med-edit-id">
+    <button class="primary" onclick="saveMed()">Lagre</button>
+    <button class="danger-btn" id="med-delete-btn" onclick="deleteMedConfirm()" style="display:none">Slett medisin</button>
+    <div class="err" id="med-error"></div>
+  </div>
+</div>
+
+<script>
+const KEY='meds_v2';
+const STD_CATS=['Smertestillende / febernedsettende'];
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{meds:[],logs:[],cats:[]}}catch(e){return{meds:[],logs:[],cats:[]}}}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d))}
+let db=load();
+if(!db.cats)db.cats=[];
+if(!db.logs)db.logs=[];
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function allCats(){return[...STD_CATS,...db.cats]}
+function todayStr(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
+function fmtDateLabel(ds){
+  const p=ds.split('-');
+  const d=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+  const days=['søn','man','tir','ons','tor','fre','lør'];
+  const months=['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+  return{full:parseInt(p[2])+'. '+months[d.getMonth()]+' '+p[0],wd:days[d.getDay()]};
+}
+function isMedActive(med){
+  if(med.type!=='temp')return true;
+  const today=todayStr();
+  if(med.from&&today<med.from)return false;
+  if(med.to&&today>med.to)return false;
+  return true;
+}
+let currentSlots=[],logRange=7,grafRange=7;
+function showView(v,btn){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.bn').forEach(e=>e.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(v==='idag')renderIdag();
+  if(v==='logg')renderLogg();
+  if(v==='graf')renderGraf();
+  if(v==='medisiner')renderMedisiner();
+}
+function openModal(n){document.getElementById('overlay-'+n).classList.add('open')}
+function closeModal(n){document.getElementById('overlay-'+n).classList.remove('open')}
+function toggleDuration(){
+  const t=document.getElementById('med-type').value;
+  document.getElementById('duration-fields').style.display=t==='temp'?'block':'none';
+}
+function renderIdag(){
+  const now=new Date();
+  const days=['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+  const months=['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  document.getElementById('today-label').textContent=days[now.getDay()]+' '+now.getDate()+'. '+months[now.getMonth()];
+  const today=todayStr();
+  const activeMeds=db.meds.filter(m=>isMedActive(m));
+  const takenToday=db.logs.filter(l=>l.date===today).length;
+  const totalSlots=activeMeds.reduce((s,m)=>s+m.slots.length,0);
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Medisiner i dag</div><div class="metric-val">${activeMeds.length}</div></div>
+    <div class="metric"><div class="metric-label">Tatt i dag</div><div class="metric-val">${takenToday}/${totalSlots}</div></div>`;
+  const el=document.getElementById('idag-list');
+  if(!activeMeds.length){el.innerHTML='<div class="empty">Ingen aktive medisiner i dag.</div>';return}
+  el.innerHTML=activeMeds.map(med=>{
+    const typeLabel=med.type==='temp'?`<span class="med-type-badge temp">Kur${med.to?' til '+med.to.split('-').slice(1).reverse().join('.'):''}  </span>`:'';
+    const slots=med.slots.map(slot=>{
+      const key=today+'|'+med.id+'|'+slot.name;
+      const taken=db.logs.some(l=>l.key===key);
+      return`<div class="slot-row">
+        <span class="slot-label">${slot.name}</span>
+        ${slot.dose?`<span class="slot-dose">${slot.dose}</span>`:''}
+        <button class="check-btn${taken?' taken':''}" onclick="toggleLog('${key}','${today}','${med.id}','${slot.name}')" aria-label="${taken?'Angre':'Marker som tatt'}">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+    return`<div class="med-card">
+      <div class="med-card-header">
+        <span class="med-card-name">${med.name}</span>
+        ${typeLabel}
+        <span class="med-card-cat">${med.cat}</span>
+      </div>
+      <div class="slot-rows">${slots}</div>
+    </div>`;
+  }).join('');
+}
+function toggleLog(key,date,medId,slotName){
+  const idx=db.logs.findIndex(l=>l.key===key);
+  if(idx>=0)db.logs.splice(idx,1);
+  else db.logs.push({id:uid(),key,date,medId,slotName,ts:Date.now()});
+  save(db);renderIdag();
+}
+function setLogRange(n,btn){
+  logRange=n;
+  document.querySelectorAll('#view-logg .log-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderLogg();
+}
+function buildDateList(range){
+  const todayDs=todayStr();
+  if(range===0){
+    return[...new Set([todayDs,...db.logs.map(l=>l.date)])].sort((a,b)=>b.localeCompare(a));
+  }
+  const today=new Date();today.setHours(0,0,0,0);
+  const result=[];
+  for(let i=0;i<range;i++){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    result.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+  }
+  return result;
+}
+function renderLogg(){
+  const el=document.getElementById('timeline');
+  if(!db.meds.length){el.innerHTML='<div class="empty">Ingen medisiner registrert ennå.</div>';return}
+  const todayDs=todayStr();
+  const dates=buildDateList(logRange);
+  if(!dates.length){el.innerHTML='<div class="empty">Ingen oppføringer ennå.</div>';return}
+  el.innerHTML=dates.map(ds=>{
+    const lbl=fmtDateLabel(ds);
+    const isToday=ds===todayDs;
+    const dayLogs=db.logs.filter(l=>l.date===ds).sort((a,b)=>a.slotName.localeCompare(b.slotName,'nb'));
+    const entries=dayLogs.length
+      ?dayLogs.map(l=>{
+          const med=db.meds.find(m=>m.id===l.medId);
+          const slot=med&&med.slots.find(s=>s.name===l.slotName);
+          return`<div class="day-entry">
+            <span class="day-entry-name">${med?med.name:'(slettet)'}</span>
+            <span class="day-entry-slot">${l.slotName}</span>
+            ${slot&&slot.dose?`<span class="day-entry-dose">${slot.dose}</span>`:''}
+          </div>`;
+        }).join('')
+      :`<div class="day-empty">Ingenting logget</div>`;
+    return`<div class="day-block">
+      <div class="day-head">
+        <span class="day-head-date" style="${isToday?'color:var(--accent);font-weight:700':''}">${lbl.full}</span>
+        <span class="day-head-wd">${lbl.wd}</span>
+      </div>
+      <div class="day-entries">${entries}</div>
+    </div>`;
+  }).join('');
+}
+function setGrafRange(n,btn){
+  grafRange=n;
+  document.querySelectorAll('#view-graf .log-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderGraf();
+}
+function renderGraf(){
+  const el=document.getElementById('graf-content');
+  if(!db.meds.length){el.innerHTML='<div class="empty">Ingen medisiner registrert ennå.</div>';return}
+  const todayDs=todayStr();
+  const dates=buildDateList(grafRange);
+  if(!dates.length){el.innerHTML='<div class="empty">Ingen oppføringer ennå.</div>';return}
+  el.innerHTML=dates.map(ds=>{
+    const lbl=fmtDateLabel(ds);
+    const isToday=ds===todayDs;
+    const dayLogs=db.logs.filter(l=>l.date===ds);
+    const medBars=db.meds.map(med=>{
+      const slots=med.slots.map(slot=>{
+        const key=ds+'|'+med.id+'|'+slot.name;
+        const taken=dayLogs.some(l=>l.key===key);
+        return`<div class="graf-slot${taken?' taken':''}" title="${slot.name}">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>`;
+      }).join('');
+      return`<div class="graf-med-bar"><span class="graf-med-label">${med.name}</span><div class="graf-slots">${slots}</div></div>`;
+    }).join('');
+    return`<div class="graf-row">
+      <div class="graf-date">
+        <div class="graf-date-main" style="${isToday?'color:var(--accent);font-weight:700':''}">${lbl.full.split(' ').slice(0,2).join(' ')}</div>
+        <div class="graf-date-wd">${lbl.wd}</div>
+      </div>
+      <div class="graf-bar-wrap">${medBars}</div>
+    </div>`;
+  }).join('');
+}
+function renderMedisiner(){
+  const catEl=document.getElementById('cat-list');
+  catEl.innerHTML=STD_CATS.map(c=>`<div class="cat-row"><span style="font-size:14px;color:var(--text)">${c}</span><span style="font-size:11px;color:var(--text-ter)">standard</span></div>`).join('')
+    +db.cats.map(c=>`<div class="cat-row"><span style="font-size:14px;color:var(--text)">${c}</span><button class="icon-btn danger" onclick="deleteCat('${c}')" aria-label="Slett"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+  const medEl=document.getElementById('med-settings-list');
+  if(!db.meds.length){medEl.innerHTML='<div class="empty" style="padding:16px">Ingen medisiner lagt til ennå.</div>';return}
+  medEl.innerHTML=db.meds.map(m=>{
+    const typeStr=m.type==='temp'?` · Kur${m.from?' fra '+m.from:''}${m.to?' til '+m.to:''}`:' · Fast';
+    return`<div class="settings-med-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:500;color:var(--text)">${m.name}</div>
+        <div style="font-size:11px;color:var(--text-ter);margin-top:2px">${m.cat}${typeStr} · ${m.slots.map(s=>s.name+(s.dose?' ('+s.dose+')':'')).join(', ')}</div>
+      </div>
+      <button class="icon-btn" onclick="openEditMed('${m.id}')" aria-label="Rediger">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+function addCat(){const inp=document.getElementById('new-cat-input'),v=inp.value.trim();if(!v||allCats().includes(v))return;db.cats.push(v);save(db);inp.value='';renderMedisiner()}
+function deleteCat(cat){if(!confirm('Slette kategorien «'+cat+'»?'))return;db.cats=db.cats.filter(c=>c!==cat);save(db);renderMedisiner()}
+function renderSlotListModal(){
+  document.getElementById('slot-list-modal').innerHTML=currentSlots.map((s,i)=>`<div class="slot-item">
+    <span class="slot-item-name">${s.name}</span>
+    ${s.dose?`<span class="slot-item-dose">${s.dose}</span>`:''}
+    <button class="icon-btn danger" style="width:28px;height:28px" onclick="removeSlot(${i})" aria-label="Fjern">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>`).join('');
+}
+function addSlot(){const name=document.getElementById('slot-name-input').value.trim();if(!name)return;const dose=document.getElementById('slot-dose-input').value.trim();currentSlots.push({name,dose});document.getElementById('slot-name-input').value='';document.getElementById('slot-dose-input').value='';renderSlotListModal()}
+function removeSlot(i){currentSlots.splice(i,1);renderSlotListModal()}
+function populateCatSelect(val){const sel=document.getElementById('med-cat');sel.innerHTML=allCats().map(c=>`<option value="${c}"${c===val?' selected':''}>${c}</option>`).join('')}
+function openAddMed(){
+  document.getElementById('med-modal-title').textContent='Ny medisin';
+  document.getElementById('med-name').value='';
+  document.getElementById('med-edit-id').value='';
+  document.getElementById('med-error').textContent='';
+  document.getElementById('med-delete-btn').style.display='none';
+  document.getElementById('med-type').value='fast';
+  document.getElementById('med-from').value='';
+  document.getElementById('med-to').value='';
+  document.getElementById('duration-fields').style.display='none';
+  currentSlots=[];renderSlotListModal();populateCatSelect('');openModal('med');
+}
+function openEditMed(id){
+  const m=db.meds.find(x=>x.id===id);if(!m)return;
+  document.getElementById('med-modal-title').textContent='Rediger medisin';
+  document.getElementById('med-name').value=m.name;
+  document.getElementById('med-edit-id').value=id;
+  document.getElementById('med-error').textContent='';
+  document.getElementById('med-delete-btn').style.display='block';
+  document.getElementById('med-type').value=m.type||'fast';
+  document.getElementById('med-from').value=m.from||'';
+  document.getElementById('med-to').value=m.to||'';
+  document.getElementById('duration-fields').style.display=m.type==='temp'?'block':'none';
+  currentSlots=m.slots.map(s=>({...s}));renderSlotListModal();populateCatSelect(m.cat);openModal('med');
+}
+function saveMed(){
+  const name=document.getElementById('med-name').value.trim();
+  if(!name){document.getElementById('med-error').textContent='Navn er påkrevd.';return}
+  if(!currentSlots.length){document.getElementById('med-error').textContent='Legg til minst ett tidspunkt.';return}
+  const editId=document.getElementById('med-edit-id').value;
+  const cat=document.getElementById('med-cat').value;
+  const type=document.getElementById('med-type').value;
+  const from=type==='temp'?document.getElementById('med-from').value:'';
+  const to=type==='temp'?document.getElementById('med-to').value:'';
+  if(editId){
+    const m=db.meds.find(x=>x.id===editId);
+    if(m){m.name=name;m.cat=cat;m.slots=currentSlots;m.type=type;m.from=from;m.to=to}
+  } else {
+    db.meds.push({id:uid(),name,cat,slots:currentSlots,type,from,to});
+  }
+  save(db);closeModal('med');renderMedisiner();renderIdag();
+}
+function deleteMedConfirm(){const id=document.getElementById('med-edit-id').value;const m=db.meds.find(x=>x.id===id);if(!confirm('Slette '+(m?m.name:'denne medisinen')+'?'))return;db.meds=db.meds.filter(x=>x.id!==id);db.logs=db.logs.filter(l=>l.medId!==id);save(db);closeModal('med');renderMedisiner();renderIdag()}
+function downloadBackup(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');const now=new Date();const dato=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');a.href=url;a.download='meds-sikkerhetskopi-'+dato+'.json';a.click();URL.revokeObjectURL(url)}
+function restoreBackup(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){try{const parsed=JSON.parse(ev.target.result);if(!parsed.meds||!Array.isArray(parsed.meds))throw new Error();if(!confirm('Dette vil erstatte alle eksisterende data. Er du sikker?'))return;db=parsed;if(!db.cats)db.cats=[];if(!db.logs)db.logs=[];save(db);const msg=document.getElementById('backup-msg');msg.textContent='Gjenopprettet '+db.meds.length+' medisiner.';msg.style.display='block';setTimeout(()=>msg.style.display='none',4000);renderIdag()}catch(err){alert('Ugyldig sikkerhetskopifil.')}};reader.readAsText(file);e.target.value=''}
+renderIdag();
+</script>
+</body>
+</html>
